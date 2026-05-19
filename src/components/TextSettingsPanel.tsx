@@ -1,5 +1,6 @@
 import { Plus, Trash2, Brush, Upload, X, Layers } from 'lucide-react';
 import type { TextOverlay } from '../types';
+import { trackTextAdd } from '../analytics';
 
 interface TextSettingsPanelProps {
   textOverlays: TextOverlay[];
@@ -62,6 +63,7 @@ export default function TextSettingsPanel({
       shadowBlur: 10,
     };
     onChangeTextOverlays([...textOverlays, newOverlay]);
+    trackTextAdd(newOverlay.fontFamily, newOverlay.blendMode);
   };
 
   // Modify text overlay fields

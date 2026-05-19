@@ -23,6 +23,13 @@ import CropSelector from './components/CropSelector';
 import EditorCanvas from './components/EditorCanvas';
 import TextSettingsPanel from './components/TextSettingsPanel';
 import { processImage } from './image-processor';
+import {
+  trackFilterApply,
+  trackManualAdjustment,
+  trackCropApply,
+  trackPhotoExport,
+  trackMaskPaint,
+} from './analytics';
 
 export default function App() {
   const [image, setImage] = useState<HTMLImageElement | null>(null);
@@ -122,12 +129,14 @@ export default function App() {
     setSelectedPresetId(preset.id);
     setPresetStrength(100); // Reset preset strength on change
     setManualAdjustments(DEFAULT_ADJUSTMENTS); // Reset manual tweaks so they can start fresh
+    trackFilterApply(preset.name);
   };
 
   // Change individual slider
   const handleChangeAdjustment = (key: keyof Adjustments, value: any) => {
     if (key === 'borderType') {
       setManualAdjustments((prev) => ({ ...prev, borderType: value }));
+      trackManualAdjustment('borderType', value);
       return;
     }
 
@@ -146,6 +155,7 @@ export default function App() {
       ...prev,
       [key]: manualVal,
     }));
+    trackManualAdjustment(key, value);
   };
 
   // Reset Adjustments
@@ -173,11 +183,13 @@ export default function App() {
   const handleMaskUpdated = () => {
     setHasMask(true);
     setManualAdjustments((prev) => ({ ...prev }));
+    trackMaskPaint(brushSize);
   };
 
   // Crop Ratio change (Calculates starting centered frame)
   const handleSelectCrop = (crop: CropAspectRatio) => {
     setSelectedCrop(crop);
+    trackCropApply(crop.name);
     if (crop.value === null) {
       setCropArea({ x: 0, y: 0, width: 100, height: 100 });
     } else if (image) {
@@ -214,6 +226,12 @@ export default function App() {
     if (!image) return;
     setExporting(true);
     setExportSuccess(false);
+
+    const presetName = selectedPresetId === 'original' 
+      ? 'Original' 
+      : PRESETS.find((p) => p.id === selectedPresetId)?.name || selectedPresetId;
+
+    trackPhotoExport(exportFormat, presetName, textOverlays.length > 0);
 
     // Delay slightly to show processing loader
     setTimeout(() => {

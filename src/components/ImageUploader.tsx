@@ -1,5 +1,6 @@
 import React, { useState, useRef } from 'react';
 import { Upload, Image as ImageIcon, AlertCircle } from 'lucide-react';
+import { trackPhotoUpload } from '../analytics';
 
 interface ImageUploaderProps {
   onImageSelected: (image: HTMLImageElement) => void;
@@ -36,6 +37,8 @@ export default function ImageUploader({ onImageSelected }: ImageUploaderProps) {
       setError('File is too large. Please select an image under 15MB.');
       return;
     }
+
+    trackPhotoUpload(file.name, file.size, file.type);
 
     const reader = new FileReader();
     reader.onload = (e) => {
